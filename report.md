@@ -20,12 +20,18 @@ All reported results are from simulation, not physical quantum hardware.
 - Model: four-qubit variational quantum classifier.
 - Optimizer: COBYLA.
 - Maximum objective evaluations: 100.
+- Initial training objective: 0.2597988579.
 - Final training objective: 0.1996649351.
+- Absolute objective reduction: 0.0601339228 (approximately 23.1%).
 - Training initialization seed: 42.
 
-The optimizer stopped because it reached its objective-evaluation limit.
-Successful convergence was not established. The final objective value must not
-be interpreted as proof of a global or local optimum.
+A read-only diagnostic run with the same seed reproduced the final objective
+and the same 100-evaluation termination status. This supports reproducibility
+and shows objective improvement during optimization, but the objective
+history was not recorded, so the detailed optimization trajectory cannot be
+assessed. The optimizer stopped because it reached its objective-evaluation
+limit. Successful convergence was not established. The final objective value
+must not be interpreted as proof of a global or local optimum.
 
 The held-out test set contains 40 samples. Because it is small, each test
 prediction changes accuracy by 2.5 percentage points. Results should therefore
