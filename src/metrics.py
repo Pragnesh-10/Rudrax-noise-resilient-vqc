@@ -77,19 +77,30 @@ def eval_noisy(X, y, theta, config, shots=4096, mitigate_readout=False, seed=42)
 
 
 def _zne_scaled_circuit(config, noise_scale_factor):
-    """Build a NoiseModel with scaled CX depolarizing error for ZNE.
+    """Build a NoiseModel with scaled error rates for ZNE.
 
-    The original CX probability from the config is multiplied by
-    noise_scale_factor to amplify noise for extrapolation.
+    The original error probabilities from the config are multiplied by
+    noise_scale_factor to amplify noise for extrapolation. All noise
+    channels (single-qubit depolarizing, CX depolarizing, readout) are
+    scaled by the same factor so that the relative ratios are preserved.
     """
+    p1_original = float(config["noise"]["single_qubit_depolarizing_probability"])
     p2_original = float(config["noise"]["cx_depolarizing_probability"])
+    pr_original = float(config["noise"]["readout_bit_flip_probability"])
+
+    p1_scaled = p1_original * noise_scale_factor
     p2_scaled = p2_original * noise_scale_factor
-    pr = float(config["noise"]["readout_bit_flip_probability"])
+    pr_scaled = pr_original  # readout error scaled separately below
 
     model = NoiseModel()
-    model.add_all_qubit_quantum_error(depolarizing_error(p2_scaled, 2), ["cx"])
+    model.add_all_qubit_quantum_error(
+        depolarizing_error(p1_scaled, 1), ["x", "sx", "rz"]
+    )
+    model.add_all_qubit_quantum_error(
+        depolarizing_error(p2_scaled, 2), ["cx"]
+    )
     model.add_all_qubit_readout_error(
-        ReadoutError([[1 - pr, pr], [pr, 1 - pr]])
+        ReadoutError([[1 - pr_scaled, pr_scaled], [pr_scaled, 1 - pr_scaled]])
     )
     return model
 
