@@ -1,0 +1,9 @@
+{
+  "optimizer": "COBYLA",
+  "success": false,
+  "message": "Return from COBYLA because the objective function has been evaluated MAXFUN times.",
+  "iterations": 35,
+  "train_subset_size": 80,
+  "seed": 42,
+  "final_objective": 0.20011842498230864
+}

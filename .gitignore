@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+QFF_HACKATHON_PHASE1_PARTICIPATANTS_INSTRUCTIONSUNSTOP_DRIVE

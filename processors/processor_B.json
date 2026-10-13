@@ -1,0 +1,67 @@
+{
+  "name": "Processor B",
+  "qubits": 9,
+  "coupling_edges": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      6
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      5,
+      6
+    ],
+    [
+      6,
+      7
+    ],
+    [
+      6,
+      8
+    ],
+    [
+      8,
+      0
+    ]
+  ],
+  "basis_gates": [
+    "rz",
+    "sx",
+    "x",
+    "cx"
+  ],
+  "noise": {
+    "single_qubit_depolarizing_probability": 0.001,
+    "cx_depolarizing_probability": 0.005,
+    "readout_bit_flip_probability": 0.01
+  },
+  "transpilation": {
+    "optimization_level": 1,
+    "seed_transpiler": 42,
+    "shots": 4096
+  },
+  "note": "Master Guide reference topology; participants may design another valid 9-qubit graph."
+}

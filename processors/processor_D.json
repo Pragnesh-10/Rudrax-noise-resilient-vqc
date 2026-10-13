@@ -1,0 +1,28 @@
+{
+  "name": "Processor D",
+  "qubits": 6,
+  "coupling_edges": [
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 4],
+    [4, 5]
+  ],
+  "basis_gates": [
+    "rz",
+    "sx",
+    "x",
+    "cx"
+  ],
+  "noise": {
+    "single_qubit_depolarizing_probability": 0.001,
+    "cx_depolarizing_probability": 0.005,
+    "readout_bit_flip_probability": 0.01
+  },
+  "transpilation": {
+    "optimization_level": 1,
+    "seed_transpiler": 42,
+    "shots": 4096
+  },
+  "note": "6-qubit linear-chain design targeting reduced CX count and routing overhead. Same synthetic noise model as A and B for fair comparison. Chosen to address the CX-count bottleneck observed on Processor A (7.0 mean CX vs 4.0 on Processor B). The linear chain reduces SWAP overhead at the cost of some connectivity, providing a baseline for measuring the trade-off between connectivity and noise resilience."
+}

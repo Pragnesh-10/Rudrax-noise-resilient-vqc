@@ -1,0 +1,16 @@
+{
+  "n_runs": 3,
+  "shots_per_sample": 4096,
+  "accuracy_mean": 0.6333333333333333,
+  "accuracy_std": 0.014433756729740658,
+  "brier_score_mean": 0.21400280048449835,
+  "brier_score_std": 0.001123297716781422,
+  "accuracy_range": [
+    0.625,
+    0.65
+  ],
+  "brier_score_range": [
+    0.21321158111095428,
+    0.21528850942850114
+  ]
+}
