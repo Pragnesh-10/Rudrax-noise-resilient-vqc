@@ -30,7 +30,7 @@ python main.py
 3. Readout mitigation here uses the stated symmetric bit-flip probability analytically. It is a lightweight mitigation demonstration, **not** a calibration matrix estimated from calibration circuits. Clearly disclose this distinction.
 4. The current code reports depth/CX/SWAP from one representative compiled test circuit. For a stronger submission, compile and aggregate metrics across all test samples or report why the representative circuit is used.
 5. Verify whether the transpiler's measurement mapping and the noise model's instruction names behave as expected in your installed Qiskit version. Do not submit without checking the run logs and saved outputs.
-6. This first version does not implement ZNE, multi-seed confidence intervals, or a classical baseline. Add them only after the core workflow runs reliably.
+6. This version implements ZNE error mitigation, repeated-run variance analysis, and a comparative architecture study across Processor A, B, and D. Update with final results before submission.
 7. If the organizer supplies newer topology/noise instructions, follow those and update `processors/*.json` and this README.
 
 ## Repository map
