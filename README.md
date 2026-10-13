@@ -51,3 +51,5 @@ python main.py
 - [ ] Include exact Python/package versions used
 - [ ] Add architecture rationale and limitations to `report.md`
 - [ ] Ensure repository is public and submit its URL before the deadline stated in the latest official guide
+
+- ZNE cost overhead now correctly reports total_shots as shots per sample multiplied by the number of noise factors.

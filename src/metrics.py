@@ -205,14 +205,14 @@ def zne_evaluate(X, y, theta, config, noise_factors=(1.0, 2.0, 3.0), shots=4096,
         "overhead_multiplier": float(len(noise_factors)),
         "shots_per_sample": int(shots),
         "stabilized": bool(stabilized),
-        "stability_gap_mean": float(stability_gap) if not stabilized else 0.0,
+        "stability_gap_mean": float(stability_gap),
     }
 
     mitigated_metrics = {
         "accuracy": accuracy,
         "brier_score": brier,
         "shots_per_sample": int(shots),
-        "total_shots": int(shots * n_samples),
+        "total_shots": int(shots * n_samples * len(noise_factors)),
         "circuit_executions": int(total_executions),
         "readout_mitigated": False,
         "zne_applied": True,
