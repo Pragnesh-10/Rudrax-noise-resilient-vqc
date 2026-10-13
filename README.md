@@ -1,55 +1,143 @@
-# QFF 2026 Phase 1 — PS-Q3: Noise-Resilient Classification
+# QFF 2026 Phase 1 — PS-Q3: Noise-Resilient Classifier
 
-## Status
-Starter implementation scaffold aligned to the uploaded **QFF Phase 1 Master Guide**. Run and validate before submission; do not report generated metrics until the run completes successfully.
+## Project overview
 
-## Scope
-- 4-qubit variational quantum classifier (VQC)
-- Synthetic binary classification data generated with scikit-learn (`n_samples=200`, 4 features, `random_state=42`, 80/20 split)
-- Participant-defined 5-qubit Processor A and 9-qubit Processor B coupling maps
-- Identical synthetic noise probabilities on A and B: single-qubit depolarizing 0.001, CX depolarizing 0.005, readout bit-flip 0.01
-- Ideal reference, noisy A/B, and readout-corrected A/B comparisons
-- Transpilation optimization level 1 and seed 42; noisy evaluations use 4096 shots/sample
+This project implements a four-qubit variational quantum classifier (VQC) for
+a synthetic binary-classification task. It compares ideal evaluation with noisy
+simulation on Processor A and Processor B and evaluates two mitigation
+approaches: analytic readout-error correction and zero-noise extrapolation
+(ZNE).
 
-## Setup
-Python 3.10+ is recommended.
+The experiment is a simulation-based comparison. It does not demonstrate
+performance on physical quantum hardware or on a real-world dataset.
+
+## Dataset and experiment
+
+- Synthetic dataset: 200 samples, 4 features, random seed 42.
+- Train/test split: 80% training and 20% held-out test data.
+- Held-out test set: 40 examples.
+- Optimizer: COBYLA, limited to 100 objective evaluations.
+- Transpilation: optimization level 1, transpiler seed 42.
+- Simulation shots: 4,096 per sample for each baseline evaluation.
+- Noise settings: single-qubit depolarizing probability 0.001, CX depolarizing
+  probability 0.005, and symmetric readout bit-flip probability 0.01.
+
+The latest training run reached the 100-evaluation limit and reported
+`success=false`. Optimizer convergence has therefore **not been confirmed**.
+
+## Processor configurations
+
+The benchmark uses the topology and noise settings in:
+
+- `processors/processor_A.json` — 5-qubit linear chain.
+- `processors/processor_B.json` — 9-qubit graph.
+
+The exact coupling edges are validated in `src/processors.py`. The Phase 1
+Master Guide permits participant-defined coupling maps. Our selected graphs
+and their limitations are documented in `audit/specification_conflicts.md`.
+
+Processor D has a configuration file, but the current benchmark workflow
+compares Processor A and Processor B. Do not interpret the existence of the
+Processor D file as evidence that Processor D was benchmarked.
+
+## Mitigation methods and caveats
+
+- **Readout correction:** uses the configured symmetric readout-error
+  probability analytically. It does not estimate a calibration matrix from
+  calibration circuits.
+- **Zero-noise extrapolation (ZNE):** scales simulator noise parameters and
+  extrapolates across noise factors 1, 2, and 3. It is not gate-folding-based
+  noise amplification. The reported ZNE evaluation uses three times the
+  baseline circuit executions.
+- **Ideal reference:** uses ideal statevector evaluation and is not a
+  shot-matched noisy baseline.
+
+These implementation details should be disclosed when presenting results.
+
+## Latest recorded results
+
+Results below are from the latest saved benchmark run. Accuracy is measured
+on 40 held-out examples, so each individual prediction changes accuracy by
+2.5 percentage points.
+
+| Processor / condition | Accuracy | Brier score |
+|---|---:|---:|
+| Ideal reference | 75.0% | 0.207742 |
+| Processor A — noisy | 75.0% | 0.210657 |
+| Processor A — readout corrected | 75.0% | 0.210028 |
+| Processor A — ZNE | 77.5% | 0.208720 |
+| Processor A — repeated-run mean | 74.17% | 0.211164 |
+| Processor B — noisy | 72.5% | 0.209538 |
+| Processor B — readout corrected | 72.5% | 0.208888 |
+| Processor B — ZNE | 72.5% | 0.207499 |
+| Processor B — repeated-run mean | 74.17% | 0.210203 |
+
+In this run, ZNE lowered the Brier score on both processors. It raised
+Processor A's observed accuracy from 75.0% to 77.5%; Processor B's observed
+accuracy remained at 72.5%. These results are preliminary, not evidence of
+statistical significance or broad generalization. Repeated-run summaries use
+three runs.
+
+## Setup and execution
+
+Python 3.10 or newer is recommended. Use a virtual environment.
+
+### macOS / Linux
 
 ```bash
-python -m venv .venv
-# macOS/Linux
+python3 -m venv .venv
 source .venv/bin/activate
-# Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python main.py
 ```
 
-## Important methodological notes
-1. The Master Guide says coupling maps are participant-designed. The included graphs are starting choices based on its reference graphs, not a claim that they are the only valid maps.
-2. This scaffold trains with an ideal statevector and a small COBYLA run. Training quality may be limited; increase iterations only after the end-to-end workflow runs.
-3. Readout mitigation here uses the stated symmetric bit-flip probability analytically. It is a lightweight mitigation demonstration, **not** a calibration matrix estimated from calibration circuits. Clearly disclose this distinction.
-4. The current code reports depth/CX/SWAP from one representative compiled test circuit. For a stronger submission, compile and aggregate metrics across all test samples or report why the representative circuit is used.
-5. Verify whether the transpiler's measurement mapping and the noise model's instruction names behave as expected in your installed Qiskit version. Do not submit without checking the run logs and saved outputs.
-6. This version implements ZNE error mitigation, repeated-run variance analysis, and a comparative architecture study across Processor A, B, and D. Update with final results before submission.
-7. If the organizer supplies newer topology/noise instructions, follow those and update `processors/*.json` and this README.
+### Windows PowerShell
+
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python main.py
+```
+
+Run the test suite:
+
+```bash
+python -m pytest -q
+```
+
+The current development environment passed 21 tests. Re-run the tests after
+installing dependencies or making changes.
+
+## Notebook
+
+Open `main.ipynb` in Jupyter from the repository root and run its cells. The
+notebook invokes `main.py`; it does not implement a separate training pipeline.
 
 ## Repository map
-- `main.py`: end-to-end run
-- `main.ipynb`: create a notebook that imports/runs the same workflow (required by the guide)
-- `src/problem.py`: data generation and VQC
-- `src/processors.py`: coupling maps and noise models
-- `src/routing.py`: transpilation and circuit metrics
-- `src/metrics.py`: noisy evaluation and readout correction
-- `src/visualization.py`: plot
-- `processors/`: processor configuration
-- `results/`: generated outputs (do not commit fake or hand-entered metrics)
 
-## Submission checklist
-- [ ] Run from a clean environment
-- [ ] Verify all output files and metric definitions
-- [ ] Add `main.ipynb`
-- [ ] Include exact Python/package versions used
-- [ ] Add architecture rationale and limitations to `report.md`
-- [ ] Ensure repository is public and submit its URL before the deadline stated in the latest official guide
+- `main.py` — training, evaluation, and result generation.
+- `main.ipynb` — notebook entry point.
+- `src/problem.py` — dataset and classifier workflow.
+- `src/processors.py` — processor configuration validation and noise models.
+- `src/routing.py` — transpilation and circuit resource metrics.
+- `src/metrics.py` — evaluation and readout correction.
+- `src/visualization.py` — benchmark visualization.
+- `processors/` — processor JSON configurations.
+- `results/tables/` — benchmark tables, predictions, and repeated-run summaries.
+- `results/figures/` — generated figures.
+- `results/training_summary.json` — recorded optimizer outcome.
+- `report.md` — methodology, results, resource comparison, and limitations.
+- `audit/specification_conflicts.md` — topology design rationale and benchmark limitations.
 
-- ZNE cost overhead now correctly reports total_shots as shots per sample multiplied by the number of noise factors.
+## Before submission
+
+- [ ] Verify the selected coupling maps, noise settings, and design rationale against the Phase 1 Master Guide.
+- [ ] Run `python -m pytest -q`.
+- [ ] Run `python main.py` and verify that the output files are refreshed.
+- [ ] Inspect `report.md`, the CSV results, and the generated figure.
+- [ ] Confirm the required submission format and repository visibility.
+- [ ] Keep the optimizer non-convergence, test-set size, mitigation methods,
+      and ZNE execution overhead explicit in the presentation.

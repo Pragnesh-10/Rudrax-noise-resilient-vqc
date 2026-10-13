@@ -22,29 +22,27 @@ from src.visualization import plot_accuracy
 
 
 def test_processor_A_config():
-    """Processor A must have 5 qubits and the official branching-chain edges."""
+    """Processor A must have 5 qubits and the updated-kit linear-chain edges."""
     cfg = load_config("processor_A")
     assert cfg["qubits"] == 5
     edges = frozenset(frozenset(e) for e in cfg["coupling_edges"])
     expected = frozenset({
         frozenset([0, 1]), frozenset([1, 2]),
-        frozenset([1, 3]), frozenset([3, 4]),
+        frozenset([2, 3]), frozenset([3, 4]),
     })
     assert edges == expected
 
 
 def test_processor_B_config():
-    """Processor B must have 9 qubits and the official sparse-hex edges."""
+    """Processor B must have 9 qubits and the updated-kit reference edges."""
     cfg = load_config("processor_B")
     assert cfg["qubits"] == 9
     edges = frozenset(frozenset(e) for e in cfg["coupling_edges"])
     expected = frozenset({
         frozenset([0, 1]), frozenset([1, 2]),
-        frozenset([1, 6]), frozenset([2, 3]),
-        frozenset([2, 5]), frozenset([3, 4]),
+        frozenset([2, 3]), frozenset([2, 4]),
         frozenset([4, 5]), frozenset([5, 6]),
-        frozenset([6, 7]), frozenset([6, 8]),
-        frozenset([8, 0]),
+        frozenset([4, 7]), frozenset([7, 8]),
     })
     assert edges == expected
 

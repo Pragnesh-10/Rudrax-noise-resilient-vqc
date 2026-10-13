@@ -2,10 +2,22 @@
   "name": "Processor A",
   "qubits": 5,
   "coupling_edges": [
-    [0, 1],
-    [1, 2],
-    [1, 3],
-    [3, 4]
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      4
+    ]
   ],
   "basis_gates": [
     "rz",
@@ -23,5 +35,5 @@
     "seed_transpiler": 42,
     "shots": 4096
   },
-  "note": "Official Challenge Kit topology: 5-qubit branching architecture with edges (0,1), (1,2), (1,3), (3,4). Linear chain (0-1-2-3-4) is a reference baseline only."
+  "note": "Updated Challenge Kit reference topology: 5-qubit linear chain."
 }

@@ -7,8 +7,8 @@ from qiskit_aer.noise import NoiseModel, depolarizing_error, ReadoutError
 
 ROOT = Path(__file__).resolve().parents[1]
 
-EXPECTED_PROCESSOR_A_EDGES = frozenset({frozenset(e) for e in [[0, 1], [1, 2], [1, 3], [3, 4]]})
-EXPECTED_PROCESSOR_B_EDGES = frozenset({frozenset(e) for e in [[0, 1], [1, 2], [1, 6], [2, 3], [2, 5], [3, 4], [4, 5], [5, 6], [6, 7], [6, 8], [8, 0]]})
+EXPECTED_PROCESSOR_A_EDGES = frozenset({frozenset(e) for e in [[0, 1], [1, 2], [2, 3], [3, 4]]})
+EXPECTED_PROCESSOR_B_EDGES = frozenset({frozenset(e) for e in [[0, 1], [1, 2], [2, 3], [2, 4], [4, 5], [5, 6], [4, 7], [7, 8]]})
 
 VALID_BASIS_GATES = {"rz", "sx", "x", "cx"}
 

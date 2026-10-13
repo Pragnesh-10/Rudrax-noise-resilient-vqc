@@ -1,16 +1,16 @@
 {
   "n_runs": 3,
   "shots_per_sample": 4096,
-  "accuracy_mean": 0.7333333333333334,
+  "accuracy_mean": 0.7416666666666667,
   "accuracy_std": 0.014433756729740658,
-  "brier_score_mean": 0.2106492380301158,
-  "brier_score_std": 0.0006532637349999519,
+  "brier_score_mean": 0.21116352081298828,
+  "brier_score_std": 0.0008965081089712376,
   "accuracy_range": [
     0.725,
     0.75
   ],
   "brier_score_range": [
-    0.21024631708860397,
-    0.21140296161174774
+    0.2106345921754837,
+    0.2121986359357834
   ]
 }

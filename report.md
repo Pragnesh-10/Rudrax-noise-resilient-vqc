@@ -1,103 +1,190 @@
-# PS-Q3 Architecture Analysis — QFF 2026 Phase 1
+# QFF 2026 Phase 1 — PS-Q3: Noise-Resilient Classifier
 
-## Problem and method
+## 1. Objective
 
-This experiment implements a 4-qubit Variational Quantum Classifier (VQC) for binary classification on a synthetic dataset, benchmarked across two noisy quantum processors (Processor A: 5-qubit branching chain, Processor B: 9-qubit sparse heavy-hex-inspired graph) under the official QFF Challenge Kit synthetic noise model. The VQC uses angle encoding of 4 features, two trainable rotation layers (RY/RZ), and a ring of CX entangling gates. The classifier is trained with COBYLA optimization (max 35 iterations on 80 training samples), and evaluated under ideal, noisy, readout-mitigated, and Zero-Noise Extrapolation (ZNE) conditions. Two error mitigation methods are applied: analytic readout correction using the configured symmetric bit-flip probability, and ZNE via Richardson extrapolation with three noise-scaling factors (1.0, 2.0, 3.0). A repeated-run variance analysis (3 independent runs) quantifies shot-to-shot variability. A custom Processor D is defined to address the routing overhead bottleneck observed on Processor A.
+This project investigates how a four-qubit Variational Quantum Classifier (VQC)
+behaves under simulated quantum noise and how error-mitigation techniques affect
+classification quality. Two participant-defined processor topologies, Processor A
+and Processor B, are compared using the same synthetic binary classification task.
 
-**Dataset**: 200 synthetic samples (4 features, binary labels), generated via `sklearn.datasets.make_classification(n_samples=200, n_features=4, n_informative=3, random_state=42)` with an 80/20 train/test split. Training uses COBYLA on the first 80 training samples; the final model is evaluated on the held-out test set of 40 samples.
+All reported results are from simulation, not physical quantum hardware.
 
-**Optimizer**: COBYLA with `maxiter=35`, `rhobeg=0.3`. Training terminated at the objective evaluation limit (`MAXFUN`) without confirmed convergence; final objective value = 0.2001. The optimizer ran on training data only; test set evaluation is performed after training completion.
+## 2. Dataset and training
 
-**Random seeds**: `SEED=42` for data generation, training initialization, transpilation (`seed_transpiler=42`), and noisy evaluation (`seed_simulator=42 + i` per sample). Three repeated-run seeds are derived as `42 + run_idx * 1000`.
+- Dataset: synthetic binary classification data generated with scikit-learn.
+- Samples: 200.
+- Features: 4.
+- Dataset generation seed: 42.
+- Split: 80% training and 20% held-out test data.
+- Training subset: first 80 samples of the training split.
+- Model: four-qubit variational quantum classifier.
+- Optimizer: COBYLA.
+- Maximum objective evaluations: 100.
+- Final training objective: 0.1996649351.
+- Training initialization seed: 42.
 
-## Processor designs
+The optimizer stopped because it reached its objective-evaluation limit.
+Successful convergence was not established. The final objective value must not
+be interpreted as proof of a global or local optimum.
 
-### Processor A (5-qubit branching chain)
-- **Qubits**: 5 physical qubits (nodes 0–4)
-- **Coupling edges (undirected)**: (0,1), (1,2), (1,3), (3,4)
-- **Bidirectional connectivity**: Yes; the transpiler maps the 4-qubit logical circuit onto this chain, incurring SWAP overhead where non-adjacent CX gates are required.
-- **Basis gates**: `rz`, `sx`, `x`, `cx`
-- **Noise model**: Single-qubit depolarizing probability 0.001 per gate; CX depolarizing probability 0.005 per gate; symmetric readout bit-flip probability 0.01 per measured qubit.
-- **Transpilation**: `optimization_level=1`, `seed_transpiler=42`, basis gates preserved.
+The held-out test set contains 40 samples. Because it is small, each test
+prediction changes accuracy by 2.5 percentage points. Results should therefore
+be interpreted as preliminary rather than evidence of general performance.
 
-### Processor B (9-qubit sparse heavy-hex-inspired graph)
-- **Qubits**: 9 physical qubits (nodes 0–8)
-- **Coupling edges (undirected)**: (0,1), (1,2), (1,6), (2,3), (2,5), (3,4), (4,5), (5,6), (6,7), (6,8), (8,0)
-- **Bidirectional connectivity**: Yes; denser connectivity than Processor A reduces SWAP overhead for this circuit.
-- **Basis gates**: `rz`, `sx`, `x`, `cx`
-- **Noise model**: Identical synthetic noise rates to Processor A (0.001 single-qubit, 0.005 CX, 0.01 readout).
-- **Transpilation**: `optimization_level=1`, `seed_transpiler=42`.
+## 3. Processor configurations and simulation
 
-### Processor D (noise-resilience-focused design)
-- **Qubits**: 6 physical qubits
-- **Coupling edges (undirected)**: (0,1), (1,2), (2,3), (3,4), (4,5) — a linear chain, but with the ability to reconfigure as a "star" topology (center qubit 2 connected to 0, 1, 3, 4, 5) for specific circuit mappings.
-- **Goal**: Reduce entangling-gate overhead compared to Processor A's branching topology by providing a simpler linear chain that still supports the 4-qubit ring entanglement with fewer SWAPs. The design targets the measured CX-count bottleneck on Processor A (7.0 mean CX per compiled circuit, 960 total across 40 test samples).
-- **Gate set and noise assumptions**: Same synthetic noise model as A and B (0.001 single-qubit, 0.005 CX, 0.01 readout). No claimed better fidelities.
-- **Benchmark results**: See the `results/tables/q3_comparison.csv` and generated figures.
+The project compares two configured coupling maps:
 
-## Results
+- Processor A: 5 physical qubits.
+- Processor B: 9 physical qubits.
 
-The following table summarizes the key benchmark results, generated from `results/tables/q3_comparison.csv`:
+Both configurations use the same configured synthetic noise probabilities:
+single-qubit depolarizing probability 0.001, CX depolarizing probability 0.005,
+and symmetric readout bit-flip probability 0.01.
 
-| Processor | Condition | Accuracy | Brier Score | Depth (mean) | CX (mean) | SWAP (mean) | Circuit Executions | Shots | ZNE Applied | ZNE Stabilized |
-|-----------|-----------|----------|-------------|--------------|-----------|-------------|-------------------|-------|-------------|----------------|
-| Ideal | ideal | 0.650 | 0.212 | N/A | N/A | N/A | 0 | 0 | N/A | N/A |
-| Processor A | noisy | 0.700 | 0.214 | 24.0 | 7.0 | 0.0 | 40 | 163,840 | N/A | N/A |
-| Processor A | readout_mitigated | 0.700 | 0.213 | 24.0 | 7.0 | 0.0 | 40 | 163,840 | N/A | N/A |
-| Processor A | zne | 0.700 | 0.212 | 24.0 | 7.0 | 0.0 | 120 | 491,520 | ✓ Richardson2 | ✓ stabilized |
-| Processor A | repeated_run (mean over 3 runs) | 0.683 ± 0.029 | 0.214 ± 0.001 | 24.0 | 7.0 | 0.0 | 120 | 491,520 | N/A | N/A |
-| Processor B | noisy | 0.650 | 0.213 | 15.0 | 4.0 | 0.0 | 40 | 163,840 | N/A | N/A |
-| Processor B | readout_mitigated | 0.650 | 0.213 | 15.0 | 4.0 | 0.0 | 40 | 163,840 | N/A | N/A |
-| Processor B | zne | 0.675 | 0.212 | 15.0 | 4.0 | 0.0 | 120 | 491,520 | ✓ Richardson2 | ✓ stabilized |
-| Processor B | repeated_run (mean over 3 runs) | 0.633 ± 0.014 | 0.214 ± 0.001 | 15.0 | 4.0 | 0.0 | 120 | 491,520 | N/A | N/A |
-| Processor B | zne | 0.675 | 0.212 | 15.0 | 4.0 | 0.0 | 120 | 491,520 | ✓ Richardson2 | ✓ stabilized |
-| Processor B | repeated_run (mean over 3 runs) | 0.633 ± 0.014 | 0.214 ± 0.001 | 15.0 | 4.0 | 0.0 | 120 | 491,520 | N/A | N/A |
+Transpilation uses optimization level 1 and seed 42. The noisy baseline uses
+4096 shots per test sample. The exact topology and gate configuration are
+defined in the processor configuration files; consult those files when
+reproducing the experiment.
 
-**Key observations**:
-- Processor B's denser connectivity yields lower circuit depth (15 vs 24) and lower CX count (4 vs 7 mean), confirming the routing advantage.
-- Readout mitigation (analytic inversion) does not improve accuracy beyond the noisy baseline for this dataset/noise combination, as expected when the configured error rate approximates the actual noise.
-- ZNE results: Processor A ZNE accuracy (0.650) is identical to ideal, indicating the Richardson2 extrapolation with the chosen noise factors did not shift the probabilities sufficiently to change classifications. Processor B ZNE shows a modest improvement (0.675 vs 0.650 noisy), suggesting the noise model and extrapolation are more effective for the 9-qubit topology.
-- Repeated-run variance: Processor A shows accuracy std of 0.029 across 3 runs; Processor B shows std of 0.014, consistent with the lower shot-to-shot variability expected from the simpler compiled circuits.
-- ZNE cost overhead: 3x circuit executions (factors 1.0, 2.0, 3.0), as each sample is evaluated at three noise-scaling factors.
+These processor labels describe simulated configurations, not real quantum
+devices or measured hardware fidelities.
 
-## Interpretation
+## 4. Error mitigation methods
 
-**Processor A vs B connectivity**: Processor B's additional connectivity (11 edges vs 4 edges) reduces the mean circuit depth from 24 to 15 and mean CX count from 7 to 4. The SWAP count is 0 for both processors after transpilation, but this does not mean routing overhead is zero — it means the SWAP gates are absorbed into the CX count during Qiskit's decomposition pass. The deeper circuit on Processor A (depth 24 vs 15) indicates that SWAP insertion and re-indexing occurred, increasing the overall gate count.
+### 4.1 Analytic readout correction
 
-**Readout mitigation**: The analytic readout correction uses the configured symmetric bit-flip probability (0.01). Since the actual noise in the simulator already matches this probability, the correction essentially inverts the expected error, leaving the probabilities nearly unchanged. This is consistent with the near-identical accuracies for "noisy" and "readout_mitigated" conditions. A calibration-based approach using measured readout matrices would potentially improve results, but such calibration circuits are outside the MVP scope.
+The readout-mitigation method analytically corrects measured probabilities using
+the configured symmetric readout error rate. It does not estimate a readout
+calibration matrix from separately executed calibration circuits. Its results
+depend on the configured error rate representing the simulated readout noise.
 
-**ZNE effectiveness**: ZNE via Richardson extrapolation with three noise factors (1.0, 2.0, 3.0) and all-noise-channel scaling was implemented. The stability gap (mean difference between predicted and actual factor-3 probabilities) was 0.0 for both processors, indicating the linear noise model held well. Processor A ZNE accuracy (0.700) matches the noisy baseline (0.700), indicating the extrapolation recovered the zero-noise limit which has comparable fidelity to the configured-noise model for this topology. Processor B ZNE shows a modest gain (0.675 vs 0.650 noisy), suggesting the richer connectivity makes the noise model more amenable to effective extrapolation. The 3x execution overhead is documented; the gain on B may not justify the cost on this small dataset.
+### 4.2 Zero-Noise Extrapolation (ZNE)
 
-**Repeated-run analysis**: The 3-run repeated-evaluation experiment reveals that shot-to-shot variability (std ≈ 0.014–0.029 in accuracy) is non-negligible and should be reported alongside mean metrics. Processor B shows lower variability, consistent with its simpler compiled circuits (depth 15, CX 4).
+ZNE evaluates the circuit at noise-scaling factors 1, 2, and 3, then uses
+Richardson-style extrapolation. In this implementation, the single-qubit and
+CX depolarizing probabilities are scaled while readout error is held fixed.
+This is simulator noise-parameter scaling; it is not physical gate folding.
 
-**ZNE cost**: The ZNE experiment multiplies circuit executions by 3× (factors 1.0, 2.0, 3.0), resulting in 120 total circuit executions per processor vs. 40 for the baseline noisy evaluation. The per-execution cost is documented, and the overhead is explicitly reported.
+The reported circuit-execution overhead is 3x compared with the noisy baseline.
+The CSV records the implementation's ZNE stability diagnostic and the fraction
+of raw extrapolated values that required clipping. These diagnostics do not,
+by themselves, prove that the mitigation estimate is physically accurate.
 
-## Limitations
+## 5. Latest benchmark results
 
-- **Optimizer termination**: COBYLA terminated at `MAXFUN` (35 evaluations) without confirmed convergence. The final objective (0.200) does not guarantee a global or even local minimum. A larger optimizer budget may improve the trained model quality.
-- **Analytic readout correction**: Uses the configured symmetric bit-flip probability (0.01) as a fixed parameter. This is not a calibration-based measurement mitigation; it assumes the actual readout error matches the configured value exactly. Calibration circuits would be needed for a more robust mitigation.
-- **ZNE noise model**: Only CX depolarizing noise is scaled; single-qubit error and readout error are kept fixed. More sophisticated ZNE techniques (e.g., probabilistic error cancellation, Mitiq-integrated schemes) could provide different results.
-- **Small synthetic dataset**: 40 test samples may not be sufficient to draw strong conclusions about mitigation effectiveness on real hardware. Results may not scale to larger or more complex datasets.
-- **No ideal ZNE baseline**: The ZNE experiment does not separately track an ideal (noise-free) reference with the same shot configuration; the ideal accuracy (0.650) comes from a statevector simulation without shots or sampling noise.
-- **Processor D**: Defined after examining A/B results; its noise fidelities match the official synthetic model exactly. No better gate fidelities are assumed.
-- **No measured calibration**: Readout mitigation is analytic inversion, not measurement-conditioned on calibration circuits. This distinction must be clearly communicated in any submission.
+The following values were read from `results/tables/q3_comparison.csv`.
 
-## Files generated
+| Processor | Condition | Accuracy | Brier score |
+|---|---|---:|---:|
+| Ideal reference | Ideal | 0.750 | 0.207742 |
+| Processor A | Noisy | 0.750 | 0.210657 |
+| Processor A | Readout mitigated | 0.750 | 0.210028 |
+| Processor A | ZNE | 0.775 | 0.208720 |
+| Processor A | Repeated-run mean | 0.742 | 0.211164 |
+| Processor B | Noisy | 0.725 | 0.209538 |
+| Processor B | Readout mitigated | 0.725 | 0.208888 |
+| Processor B | ZNE | 0.725 | 0.207499 |
+| Processor B | Repeated-run mean | 0.742 | 0.210203 |
 
-- `results/tables/q3_comparison.csv` — full comparison table
-- `results/tables/*_predictions.csv` — per-sample prediction details
-- `results/tables/*_repeated_run_summary.json` — repeated-run variance summary
-- `results/figures/accuracy_comparison.png` — accuracy bar plot
-- `results/figures/brier_comparison.png` — Brier score bar plot
-- `results/figures/circuit_metrics.png` — depth/CX/SWAP grouped bars
-- `results/figures/mitigation_overhead.png` — ZNE overhead bar plot
-- `results/figures/repeated_runs.png` — accuracy/brier mean ± std across runs
-- `results/figures/zne_vs_factor.png` — ZNE noise factor count summary
+Lower Brier scores indicate better probability predictions under this metric.
+ZNE lowered the Brier score on both processors. It raised Processor A's observed
+accuracy from 75.0% to 77.5%, while Processor B remained at 72.5%. Readout
+correction lowered the Brier score slightly without changing accuracy.
 
-## Benchmark commands
+The repeated-run results are based on three runs. Processor A has accuracy
+standard deviation 0.014434 and Brier-score standard deviation
+0.000897. Processor B has accuracy standard deviation
+0.014434 and Brier-score standard deviation
+0.001937. Three runs provide only a preliminary estimate of variability.
 
-```bash
-# From the project root:
-python3 main.py
-# Generates all results, tables, and figures.
-```
+## 6. Circuit resource comparison
+
+| Metric | Processor A | Processor B |
+|---|---:|---:|
+| Mean compiled depth | 23 | 24 |
+| Mean CX count | 8 | 7 |
+| Explicit SWAP count | 0 | 0 |
+| Mean operation count | 64 | 57 |
+| Compiled circuit width | 5 | 9 |
+| Baseline circuit executions | 40 | 40 |
+| Baseline shots | 163,840 | 163,840 |
+| ZNE circuit executions | 120 | 120 |
+| ZNE shots | 491,520 | 491,520 |
+
+For this circuit and transpilation configuration, Processor A has slightly
+lower compiled depth (23 versus 24), while Processor B has fewer CX gates
+(7 versus 8) and fewer total operations (57 versus 64). These results describe
+the current configuration and do not establish that either processor will
+perform better for every circuit.
+
+A zero explicit SWAP count does not establish that routing is free. Interpret
+SWAP counts alongside depth, CX count, operation count, and the transpiled
+circuit itself.
+
+## 7. Interpretation
+
+1. Processor A achieved 75% noisy test accuracy; Processor B achieved 72.5%.
+2. ZNE raised Processor A's observed test accuracy to 77.5%; Processor B
+   remained at 72.5%. Readout correction did not change accuracy on either
+   processor.
+3. Readout correction and ZNE lowered the Brier score relative to the noisy
+   baseline on both processors.
+4. ZNE used three times as many circuit executions as the noisy baseline.
+5. Processor A had slightly lower compiled depth, while Processor B had
+   fewer CX gates and fewer total operations in this experiment.
+6. The ideal reference is a statevector result, so it is not a shot-matched
+   baseline for the noisy simulations.
+7. Accuracy is measured on only 40 held-out examples, and repeated-run
+   summaries use three runs. These results do not establish statistical
+   significance or generalization beyond this dataset and configuration.
+
+## 8. Limitations and reproducibility
+
+- COBYLA reached its 100-evaluation limit (`MAXFUN`) and reported `success=false`; convergence was not confirmed.
+- Only 40 held-out samples were evaluated.
+- Repeated-run analysis uses three runs only.
+- The dataset is synthetic and does not establish performance on a real-world
+  application.
+- Readout correction uses the configured error rate rather than a measured
+  calibration matrix.
+- ZNE scales simulator depolarizing-noise parameters; it does not use physical
+  gate folding.
+- Simulated noise parameters are assumptions, not measured hardware properties.
+- The ideal reference does not use the same shot-based evaluation as the noisy
+  conditions.
+- Results may depend on Qiskit versions, transpilation, random seeds, and the
+  supplied processor configurations.
+
+To reproduce the run, activate the project environment, install the dependencies
+listed in `requirements.txt`, and run:
+
+    python -m pytest -q
+    python main.py
+
+Check the generated CSV and JSON outputs after the run. The recorded benchmark
+should not be considered current if the code or configuration changes without
+regenerating the results.
+
+## 9. Software environment
+
+Versions recorded for this run:
+
+- Python: 3.14.2
+- Qiskit: 2.5.2
+- Qiskit Aer: 0.17.2
+- NumPy: 2.5.4
+- SciPy: 1.18.1
+- scikit-learn: 1.9.1
+
+## 10. Conclusion
+
+This experiment provides a reproducible comparison of a four-qubit VQC under
+two simulated processor topologies. In the latest run, ZNE improved the Brier
+score on both processors and raised Processor A's observed accuracy from 75% to
+77.5%; Processor B's accuracy remained at 72.5%. Processor B used fewer CX
+gates and total operations, while Processor A had slightly lower compiled
+depth. The 3x ZNE execution overhead,
+40-example test set, three repeated runs, and optimizer termination limit the
+strength of the conclusions. These limitations should be included when
+presenting the results.
