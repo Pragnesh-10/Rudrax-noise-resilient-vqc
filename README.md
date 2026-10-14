@@ -3,7 +3,7 @@
 ```bash
 Team Name: RudraX
 Team Members: 
- 1. Y Naga Pragnesh,
+ 1. Y Naga Pragnesh
  2. M Sirisha
  3. Abiramasree K
  4. Y Siva Shanmukh
