@@ -75,14 +75,13 @@ def plot_mitigation_overhead(csv_path, output_path):
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-    # Bar chart of overhead multiplier
+
     ax = axes[0]
     overhead_df.plot(x="processor", y="overhead_multiplier", kind="bar", ax=ax,
                      legend=False, title="ZNE overhead multiplier (circuit executions)")
     ax.set_ylabel("Multiplier")
     ax.set_xlabel("Processor")
 
-    # Bar chart of noise factors
     ax2 = axes[1]
     overhead_df.plot(x="processor", y="n_factors", kind="bar", ax=ax2,
                      legend=False, title="Number of ZNE noise factors used")
@@ -141,7 +140,6 @@ def plot_repeated_runs(csv_path, output_path):
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    # Brier score mean ± std
     ax2 = axes[1]
     ax2.errorbar(xs, plot_df["brier_mean"].values, yerr=plot_df["brier_std"].values,
                  fmt="o", capsize=3, label="Brier score")
@@ -171,7 +169,7 @@ def plot_zne_vs_factor(csv_path, output_path):
         plt.close(fig)
         return
 
-    # Show the number of noise factors used per processor
+    
     fig, ax = plt.subplots()
 
     for _, row in zne_rows.iterrows():

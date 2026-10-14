@@ -86,7 +86,7 @@ def eval_noisy(
         ).result()
         counts = result.get_counts()
 
-        # This scaffold measures a single classical bit. Fail loudly if that changes.
+       
         if set(counts) - {"0", "1"}:
             raise ValueError(f"Expected one-bit count keys, got: {sorted(counts)}")
 

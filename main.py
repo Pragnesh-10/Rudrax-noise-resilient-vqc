@@ -29,9 +29,7 @@ def objective(theta, X, y):
 
 
 def main():
-    # ------------------------------------------------------------------
-    # 1. Create output directories
-    # ------------------------------------------------------------------
+
     output_dirs = (
         ROOT / "data" / "raw",
         ROOT / "data" / "processed",
@@ -41,9 +39,6 @@ def main():
     for directory in output_dirs:
         directory.mkdir(parents=True, exist_ok=True)
 
-    # ------------------------------------------------------------------
-    # 2. Generate and save the dataset
-    # ------------------------------------------------------------------
     X_train, X_test, y_train, y_test, _ = make_data()
 
     np.savez(
@@ -54,9 +49,7 @@ def main():
         y_test=y_test,
     )
 
-    # ------------------------------------------------------------------
-    # 3. Train the variational classifier
-    # ------------------------------------------------------------------
+
     rng = np.random.default_rng(SEED)
     initial = rng.uniform(-0.3, 0.3, size=8)
 
@@ -95,9 +88,6 @@ def main():
         f"evaluations={opt.nfev}, objective={opt.fun:.6f}"
     )
 
-    # ------------------------------------------------------------------
-    # 4. Ideal reference result
-    # ------------------------------------------------------------------
     ideal_probs = np.array([ideal_p1(x, theta) for x in X_test])
 
     rows = [
@@ -127,7 +117,7 @@ def main():
         }
     ]
 
-    # Retain each processor's ZNE diagnostic for the final report.
+   
     zne_summaries = {}
 
     for name in ("processor_A", "processor_B"):

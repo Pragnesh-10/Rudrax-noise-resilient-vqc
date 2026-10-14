@@ -44,7 +44,7 @@ def validate_config(config: dict, name: str) -> None:
             f"{name}: expected {expected_qubits[name]} physical qubits, got {config['qubits']}"
         )
 
-    # Validate coupling edges: must be bidirectional and match the official topology
+   
     provided_edges = frozenset({frozenset(e) for e in config["coupling_edges"]})
     
     if name == "processor_A":
@@ -77,7 +77,7 @@ def validate_config(config: dict, name: str) -> None:
                     queue.append(neighbor)
         if len(visited) != config["qubits"]:
             raise ValueError(f"{name}: coupling graph is not fully connected")
-        # Skip exact edge matching for D
+       
         return
 
     if provided_edges != expected_edges:
@@ -102,7 +102,7 @@ def validate_config(config: dict, name: str) -> None:
             f"Must be subset of {VALID_BASIS_GATES}."
         )
 
-    # Validate noise probabilities
+    
     n = config["noise"]
     p1 = n["single_qubit_depolarizing_probability"]
     p2 = n["cx_depolarizing_probability"]
