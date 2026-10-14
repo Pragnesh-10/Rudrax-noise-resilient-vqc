@@ -1,5 +1,17 @@
 # QFF 2026 Phase 1 — PS-Q3: Noise-Resilient Classifier
 
+```bash
+Team Name: RudraX
+Team Members: 
+ 1. Y Naga Pragnesh,
+ 2. M Sirisha
+ 3. Abiramasree K
+ 4. Y Siva Shanmukh
+Institution: SRM University, AP
+Hackathon:** Qiskit Fall Fest 2026
+Problem Statement: Q3, Noise-Resilient Classifier
+```
+
 ## Project overview
 
 This project implements a four-qubit variational quantum classifier (VQC) for
