@@ -1,18 +1,3 @@
-
-"""End-to-end QFF Phase 1 PS-Q3 experiment.
-
-Run from the project root:
-    python main.py
-
-Outputs:
-    data/processed/synthetic_qml.npz
-    results/trained_theta.npy
-    results/training_summary.json
-    results/tables/q3_comparison.csv
-    results/tables/*_predictions.csv
-    results/tables/*_repeated_run_summary.json
-    results/figures/accuracy_comparison.png
-"""
 import json
 from pathlib import Path
 
@@ -145,18 +130,12 @@ def main():
     # Retain each processor's ZNE diagnostic for the final report.
     zne_summaries = {}
 
-    # ------------------------------------------------------------------
-    # 5. Evaluate Processor A and Processor B
-    # ------------------------------------------------------------------
     for name in ("processor_A", "processor_B"):
         print(f"\nEvaluating {name}...")
         config = load_config(name)
 
         circuit_summary = aggregate_compiled_metrics(X_test, theta, config)
 
-        # --------------------------------------------------------------
-        # 5a. Noisy baseline
-        # --------------------------------------------------------------
         metrics, predictions = eval_noisy(
             X_test,
             y_test,
@@ -191,9 +170,7 @@ def main():
             }
         )
 
-        # --------------------------------------------------------------
-        # 5b. Readout-mitigated evaluation
-        # --------------------------------------------------------------
+        
         metrics_rm, predictions_rm = eval_noisy(
             X_test,
             y_test,
@@ -229,9 +206,7 @@ def main():
             }
         )
 
-        # --------------------------------------------------------------
-        # 5c. Zero-noise extrapolation (ZNE)
-        # --------------------------------------------------------------
+
         metrics_zne, factor_results, overhead = zne_evaluate(
             X_test,
             y_test,
@@ -242,8 +217,6 @@ def main():
             seed=SEED,
         )
 
-        # The clipping fraction is returned in the overhead diagnostics.
-        # Keep None if a future implementation does not provide the key.
         clipped_fraction = overhead.get(
             "raw_extrapolation_clipped_fraction",
             None,
@@ -284,9 +257,7 @@ def main():
             }
         )
 
-        # --------------------------------------------------------------
-        # 5d. Repeated-run evaluation
-        # --------------------------------------------------------------
+        
         summary, run_results = repeated_run_evaluate(
             X_test,
             y_test,
@@ -340,9 +311,6 @@ def main():
             }
         )
 
-    # ------------------------------------------------------------------
-    # 6. Export comparison table and figure
-    # ------------------------------------------------------------------
     df = pd.DataFrame(rows)
 
     output_csv = ROOT / "results" / "tables" / "q3_comparison.csv"
